@@ -31,9 +31,46 @@ jobs:
           command: doctl auth init -t $DIGITALOCEAN_ACCESS_TOKEN
       - run:
           name: Deploy to DigitalOcean App Platform
-          command: doctl apps create-deployment ${DIGITAL_OCEAN_APP_ID} \
+          command: |
+            # Check if the app exists
+            APP_ID=$(doctl apps list --format ID --no-header | head -n 1)
+            
+            if [ -z "$APP_ID" ]; then
+              echo "No existing app found. Creating a new app..."
+              APP_SPEC=$(cat <<EOF
+              {
+                "name": "test-application",
+                "region": "fra",
+                "services": [
+                  {
+                    "name": "test-application",
+                    "image": {
+                      "registry_type": "DOCR",
+                      "repository": "registry.digitalocean.com/test-application/test-application",
+                      "tag": "latest"
+                    },
+                    "instance_count": 1,
+                    "instance_size_slug": "basic-xxs",
+                    "envs": [
+                      {
+                        "key": "LISTEN_PORT",
+                        "value": "8080"
+                      }
+                    ]
+                  }
+                ]
+              }
+              EOF
+              )
+              APP_ID=$(doctl apps create --spec <(echo "$APP_SPEC") --format ID --no-header)
+              echo "Created new app with ID: $APP_ID"
+            else
+              echo "Existing app found with ID: $APP_ID"
+            fi
+            
+            # Deploy to the app
+            doctl apps create-deployment $APP_ID \
               --image registry.digitalocean.com/test-application/test-application:latest
-              
 workflows:
   build_deploy:
     jobs:
