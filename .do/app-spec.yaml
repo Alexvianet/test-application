@@ -3,9 +3,9 @@ region: fra1 # Frankfurt region
 services:
   - name: web
     image:
-      registry_type: DOCR
-      repository: registry.digitalocean.com/test-application/test-application
-      tag: latest
+      registry_type: "DOCR"
+      repository: "test-application/test-application"
+      tag: "latest"
     instance_size_slug: basic-xxs
     instance_count: 1
     routes:
