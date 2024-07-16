@@ -1,0 +1,15 @@
+name: test-application
+region: fra1 # Frankfurt region
+services:
+  - name: web
+    image:
+      registry: registry.digitalocean.com
+      repository: test-application/test-application
+      tag: latest
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    routes:
+      - path: /
+    envs:
+      - key: LISTEN_PORT
+        value: "8080"

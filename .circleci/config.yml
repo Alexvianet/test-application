@@ -32,45 +32,12 @@ jobs:
       - run:
           name: Deploy to DigitalOcean App Platform
           command: |
-            # Check if the app exists
-            APP_ID=$(doctl apps list --format ID --no-header | head -n 1)
-            
-            if [ -z "$APP_ID" ]; then
-              echo "No existing app found. Creating a new app..."
-              APP_SPEC=$(cat <<EOF
-              {
-                "name": "test-application",
-                "region": "fra",
-                "services": [
-                  {
-                    "name": "test-application",
-                    "image": {
-                      "registry_type": "DOCR",
-                      "repository": "registry.digitalocean.com/test-application/test-application",
-                      "tag": "latest"
-                    },
-                    "instance_count": 1,
-                    "instance_size_slug": "basic-xxs",
-                    "envs": [
-                      {
-                        "key": "LISTEN_PORT",
-                        "value": "8080"
-                      }
-                    ]
-                  }
-                ]
-              }
-              EOF
-              )
-              APP_ID=$(doctl apps create --spec <(echo "$APP_SPEC") --format ID --no-header)
-              echo "Created new app with ID: $APP_ID"
+            if doctl apps list | grep -q test-application; then
+              APP_ID=$(doctl apps list --format ID,Spec | grep test-application | awk '{print $1}')
+              doctl apps update $APP_ID --spec .do/app-spec.yaml
             else
-              echo "Existing app found with ID: $APP_ID"
+              doctl apps create --spec .do/app-spec.yaml
             fi
-            
-            # Deploy to the app
-            doctl apps create-deployment $APP_ID \
-              --image registry.digitalocean.com/test-application/test-application:latest
 workflows:
   build_deploy:
     jobs:
