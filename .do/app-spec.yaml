@@ -1,10 +1,10 @@
 name: test-application
-region: fra1 # Frankfurt region
+region: fra1
 services:
   - name: web
     image:
       registry_type: "DOCR"
-      repository: "test-application/test-application"
+      repository: "test-application"
       tag: "latest"
     instance_size_slug: basic-xxs
     instance_count: 1
