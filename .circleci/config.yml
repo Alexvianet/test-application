@@ -79,8 +79,7 @@ workflows:
             - account-digitalocean
           filters:
             branches:
-              only:
-                - master
+              only: master
       - deploy:
           context:
             - account-digitalocean
