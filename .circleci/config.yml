@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:16
+      - image: cimg/base:stable
     steps:
       - setup_remote_docker
       - checkout
@@ -17,6 +17,60 @@ jobs:
           name: Push Docker image to DigitalOcean Container Registry
           command: docker tag test-application registry.digitalocean.com/test-application/test-application:latest && docker push registry.digitalocean.com/test-application/test-application:latest
 
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Install doctl
+          command: |
+            curl -sL https://github.com/digitalocean/doctl/releases/download/v1.64.0/doctl-1.64.0-linux-amd64.tar.gz | tar -xz
+            sudo mv doctl /usr/local/bin
+      - run:
+          name: Authenticate doctl
+          command: doctl auth init -t $DIGITALOCEAN_ACCESS_TOKEN
+      - run:
+          name: Deploy to DigitalOcean App Platform
+          command: |
+            # Check if the app exists
+            APP_ID=$(doctl apps list --format ID --no-header | head -n 1)
+            
+            if [ -z "$APP_ID" ]; then
+              echo "No existing app found. Creating a new app..."
+              APP_SPEC=$(cat <<EOF
+              {
+                "name": "test-application",
+                "region": "fra",
+                "services": [
+                  {
+                    "name": "test-application",
+                    "image": {
+                      "registry_type": "DOCR",
+                      "repository": "registry.digitalocean.com/test-application/test-application",
+                      "tag": "latest"
+                    },
+                    "instance_count": 1,
+                    "instance_size_slug": "basic-xxs",
+                    "envs": [
+                      {
+                        "key": "LISTEN_PORT",
+                        "value": "8080"
+                      }
+                    ]
+                  }
+                ]
+              }
+              EOF
+              )
+              APP_ID=$(doctl apps create --spec <(echo "$APP_SPEC") --format ID --no-header)
+              echo "Created new app with ID: $APP_ID"
+            else
+              echo "Existing app found with ID: $APP_ID"
+            fi
+            
+            # Deploy to the app
+            doctl apps create-deployment $APP_ID \
+              --image registry.digitalocean.com/test-application/test-application:latest
 workflows:
   build_deploy:
     jobs:
@@ -27,3 +81,11 @@ workflows:
             branches:
               only:
                 - master
+      - deploy:
+          context:
+            - account-digitalocean
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
