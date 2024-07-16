@@ -1,17 +1,12 @@
 version: 2.1
 
-orbs:
-  doctl: digitalocean/cli@1.0.0
-  docker: circleci/docker@3.5.0
-
 jobs:
   build:
     docker:
       - image: circleci/node:16
     steps:
+      - setup_remote_docker
       - checkout
-      - docker/setup:
-          docker_layer_caching: true
       - run:
           name: Build Docker image
           command: docker build -t test-application .
@@ -32,13 +27,3 @@ workflows:
             branches:
               only:
                 - master
-      - deploy:
-          name: deploy-api
-          context:
-            - account-digitalocean
-          filters:
-            branches:
-              only:
-                - master
-          requires:
-            - build
