@@ -13,3 +13,4 @@ services:
     envs:
       - key: LISTEN_PORT
         value: "8080"
+    autodeploy: true
