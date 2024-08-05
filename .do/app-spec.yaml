@@ -6,6 +6,7 @@ services:
       registry_type: "DOCR"
       repository: "test-application"
       tag: "latest"
+      deploy_on_push: enabled
     instance_size_slug: basic-xxs
     instance_count: 1
     routes:
@@ -13,4 +14,3 @@ services:
     envs:
       - key: LISTEN_PORT
         value: "8080"
-    autodeploy: true
