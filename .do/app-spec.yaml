@@ -6,7 +6,7 @@ services:
       registry_type: "DOCR"
       repository: "test-application"
       tag: "latest"
-      deploy_on_push: enabled
+      deploy_on_push: true
     instance_size_slug: basic-xxs
     instance_count: 1
     routes:
