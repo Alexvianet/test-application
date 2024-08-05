@@ -10,6 +10,10 @@ app.get("/test", (req, res, next) => {
   res.send("OK");
 });
 
+app.get("/test2", (req, res, next) => {
+  res.send("OK");
+});
+
 app.get("/healthcheck", (req, res, next) => {
   res.send("OK");
 });
